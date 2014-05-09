@@ -12,7 +12,7 @@ duplicateNames <- duplicated(NanoString.mRNA$Name)
 NanoString.mRNA$Name[duplicateNames] <- paste(NanoString.mRNA$Name[duplicateNames], "-2", sep = "")
 
 # define housekeeping genes
-NanoString.mRNA[NanoString.mNRA$Name %in% c("Cltc", "GAPDH", "Hprt1", "Pgk1", "Tubb5"), "Code.Class"] <- "Housekeeping"
+NanoString.mRNA[NanoString.mRNA$Name %in% c("Cltc", "GAPDH", "Hprt1", "Pgk1", "Tubb5"), "Code.Class"] <- "Housekeeping"
 
 # extract sample subsets
 annoCols <- colnames(NanoString.mRNA)[c(1:3)]

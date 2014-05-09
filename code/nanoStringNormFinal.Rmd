@@ -1,0 +1,108 @@
+NanoStringNorm Final
+========================================================
+
+The following code is designed to import, process, and analyze NanoString data from Todd Golde's experiments in APP (Tg) and normal (WT) mice models, with and without over-expression of IL-10.
+
+Load the required libraries.
+```{r}
+require("NanoStringNorm")
+library("ggplot2")
+```
+
+We first import the data and create a data frame using `read.table`.
+```{r}
+NanoString.mRNA <- read.table("./data/AD_nanoString_data.txt", fill = TRUE, header = TRUE, 
+                              as.is = TRUE)
+```
+
+Some of the gene have duplicate names, and names are less useful to us than the RefSeq accession numbers, so we'll replace the former with the latter.
+```{r}
+NanoString.mRNA$Name[1:240] <- NanoString.mRNA$Accession[1:240]
+```
+
+Next we define the housekeeping genes in the data.
+```{r}
+# NanoString.mRNA[NanoString.mRNA$Name %in% c("Cltc", "GAPDH", "Hprt1", "Pgk1", "Tubb5"), 
+#                "Code.Class"] <- "Housekeeping"
+
+NanoString.mRNA[NanoString.mRNA$Name %in% c("NM_001003908.1", "NM_001001303.1", "NM_013556.2", "NM_008828.2", "NM_011655.5"),
+                "Code.Class"] <- "Housekeeping"
+```
+
+Here we extract sample subsets according to experiment.
+```{r}
+annoCols <- colnames(NanoString.mRNA)[c(1:3)]
+sampleIDs <- colnames(NanoString.mRNA)[-c(1:3)]
+tgSamples <- sampleIDs[c(1:12)]
+wtSamples <- sampleIDs[c(13:21)]
+oldSamples <- sampleIDs[c(22:27)]
+```
+
+We want to build a trait indicator vector to look at differential expression among Tg samples.
+```{r}
+NS.names <- names(NanoString.mRNA)[-c(1:3)]
+tgExp <- (NS.names %in% tgSamples) + 1 # value 2 indicates current group
+wtExp <- (NS.names %in% wtSamples) + 1
+oldExp <- (NS.names %in% oldSamples) + 1
+
+trait.experiment <- data.frame(
+  row.names = NS.names,
+  tgExp = tgExp,
+  wtExp = wtExp,
+  oldExp = oldExp)
+```
+
+```{r}
+norm.comp.results.test <- norm.comp(
+    x = NanoString.mRNA,
+    CodeCount.methods = c("geo.mean"),
+    Background.methods = c("mean.2sd"),
+    SampleContent.methods = c("none", "housekeeping.sum", "housekeeping.geo.mean",
+                              "total.sum", "low.cv.geo.mean", 
+                              "top.mean", "top.geo.mean"),
+    OtherNorm.methods = "none",
+    histogram = FALSE,
+    verbose = TRUE)
+```
+
+All of the above combinations of options yield virtually identical results for normalization. Given this observation, we'll go ahead and use the *recommended* set of options in the `NanoStringNorm` manual. Some of our subsequent analyses will be based on relative expression, so we won't round expression values or log-normalize.
+```{r}
+NanoString.mRNA.norm <- NanoStringNorm(
+  x = NanoString.mRNA,
+  CodeCount = "geo.mean",
+  Background = "mean.2sd",
+  SampleContent = "housekeeping.geo.mean",
+  round.values = FALSE,
+  take.log = TRUE,
+  traits = trait.experiment)
+```
+
+All of the above combinations of options yield virtually identical results for normalization. Given this observation, we'll go ahead and use the *recommended* set of options in the `NanoStringNorm` manual. Some of our subsequent analyses will be based on relative expression, so we won't round expression values or log-normalize.
+```{r}
+NanoString.mRNA.norm <- NanoStringNorm(
+  x = NanoString.mRNA,
+  CodeCount = "geo.mean",
+  Background = "mean.2sd",
+  SampleContent = "housekeeping.geo.mean",
+  round.values = FALSE,
+  take.log = TRUE,
+  traits = trait.experiment)
+```
+
+Finally, we'll generate some plots to summarize the results of the normalization.
+```{r}
+pdf("./results/NanoStringNorm_results_hkLog.pdf")
+Plot.NanoStringNorm(
+  x = NanoString.mRNA.norm,
+  label.best.guess = TRUE,
+  plot.type = c("cv", "mean.sd", "RNA.estimates", "missing", "volcano",
+                "norm.factors", "positive.controls"))
+dev.off()
+```
+
+Export the normalized data for subsequent analyses in Matlab.
+```{r}
+write.table(x = NanoString.mRNA.norm$normalized.data, file = "./results/AD_NanoStringNorm_data_hkLog.txt", sep = "\t")
+```
+
+
