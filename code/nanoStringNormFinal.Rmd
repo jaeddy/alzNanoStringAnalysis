@@ -77,18 +77,6 @@ NanoString.mRNA.norm <- NanoStringNorm(
   traits = trait.experiment)
 ```
 
-All of the above combinations of options yield virtually identical results for normalization. Given this observation, we'll go ahead and use the *recommended* set of options in the `NanoStringNorm` manual. Some of our subsequent analyses will be based on relative expression, so we won't round expression values or log-normalize.
-```{r}
-NanoString.mRNA.norm <- NanoStringNorm(
-  x = NanoString.mRNA,
-  CodeCount = "geo.mean",
-  Background = "mean.2sd",
-  SampleContent = "housekeeping.geo.mean",
-  round.values = FALSE,
-  take.log = TRUE,
-  traits = trait.experiment)
-```
-
 Finally, we'll generate some plots to summarize the results of the normalization.
 ```{r}
 pdf("./results/NanoStringNorm_results_hkLog.pdf")
