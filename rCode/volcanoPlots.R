@@ -1,12 +1,12 @@
 require(ggplot2)
 
 ## Define path to data and import to data.frame
-filePath <- "~/Google Drive/MyCode/RCode/AD_nanoString/data/nTgIL10degs.txt"
+filePath <- "~/Google Drive/MyCode/Projects/alzNanoStringAnalysis/data/TgIL10degs.txt"
 gene_list <- read.table(filePath, header = TRUE, sep = "\t")
 
 ## Highlight genes that have an absolute fold change > 2 and a q-value < 0.05
 isSig <- gene_list$Q.value < 0.05
-isFC <- abs(gene_list$Log.ratio) > 2
+isFC <- abs(gene_list$Log.ratio) > 1
 sigLevels <- numeric(length(gene_list$Log.ratio))
 sigLevels[isSig] <- 1
 sigLevels[isSig & isFC] <- 2
@@ -34,6 +34,6 @@ g <- g + geom_text(aes(x = genes$Log.ratio-0.4, y = -log10(genes$P.value)+0.25,
                   label = genes$IPA.Name, size = 1.2), colour="black")
 
 ## Save plots to eps files
-ggsave(filename = "nTgVolcano.eps", plot = g,
-       path = "~/Google Drive/MyCode/RCode/AD_nanoString/results/",
+ggsave(filename = "TgVolcano.eps", plot = g,
+       path = "~/Google Drive/MyCode/Projects/alzNanoStringAnalysis/figures/",
        width = 8.2, height = 8.2, units = "cm", dpi = 300)
